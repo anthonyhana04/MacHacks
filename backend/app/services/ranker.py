@@ -65,6 +65,22 @@ def score_constraint_satisfaction(parsed_constraints: dict, candidate: Destinati
         elif candidate_budget == target_budget + 1:
             score += 0.5
 
+    must_be_country = parsed_constraints.get("must_be_country")
+    if must_be_country:
+        checks += 1
+        if candidate.country.lower() == must_be_country.lower():
+            score += 2.0  # huge boost
+        else:
+            score -= 10.0 # heavy penalty
+
+    must_be_continent = parsed_constraints.get("must_be_continent")
+    if must_be_continent:
+        checks += 1
+        if candidate.continent.lower() == must_be_continent.lower():
+            score += 2.0
+        else:
+            score -= 10.0
+
     if parsed_constraints.get("cheaper_than_anchor") and anchor:
         checks += 1
         anchor_budget = BUDGET_ORDER.get(anchor.budget_tier, 1)
@@ -130,7 +146,7 @@ def rank_destinations(
     db: Session,
     parsed_intent: dict,
     query_embedding: list[float] | None = None,
-    top_k: int = 5,
+    top_k: int = 3,
 ) -> list[dict]:
     """
     Rank all destinations against the parsed intent.
@@ -194,6 +210,18 @@ def rank_destinations(
             + weights["constraints"] * constraint_score
             + weights["negation"] * negation_score
         )
+
+        # Apply flat score boost for nailing explicit location constraints
+        must_be_country = parsed_constraints.get("must_be_country")
+        must_be_continent = parsed_constraints.get("must_be_continent")
+        
+        if must_be_country and dest.country.lower() == must_be_country.lower():
+            total_score += 0.25
+        elif must_be_continent and dest.continent.lower() == must_be_continent.lower():
+            total_score += 0.15
+            
+        # Cap at 98% for realism
+        total_score = min(total_score, 0.98)
 
         scored.append({
             "destination": dest,

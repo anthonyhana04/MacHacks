@@ -22,6 +22,8 @@ Output this exact JSON schema:
     "budget": "budget" | "mid" | "luxury" | null,
     "season": string | null,
     "trip_length_days": number | null,
+    "must_be_country": string | null,
+    "must_be_continent": string | null,
     "warmer_than_anchor": boolean | null,
     "cooler_than_anchor": boolean | null,
     "cheaper_than_anchor": boolean | null
@@ -34,6 +36,8 @@ Rules:
 - If no anchor location is mentioned, set anchor to {"name": null, "country": null}
 - Extract vibes generously — "Italy vibes" → ["mediterranean", "historic", "romantic", "good-food"]
 - "less touristy" → negation: ["touristy"]
+- "but canada" or "in canada" → constraints.must_be_country: "Canada"
+- "in asia" → constraints.must_be_continent: "Asia"
 - "cheaper" implies budget constraint relative to anchor
 - Always return valid JSON, nothing else"""
 
@@ -358,6 +362,8 @@ def _normalize_intent(parsed: dict) -> dict:
             "budget": constraints.get("budget"),
             "season": constraints.get("season"),
             "trip_length_days": constraints.get("trip_length_days"),
+            "must_be_country": constraints.get("must_be_country"),
+            "must_be_continent": constraints.get("must_be_continent"),
             "warmer_than_anchor": constraints.get("warmer_than_anchor"),
             "cooler_than_anchor": constraints.get("cooler_than_anchor"),
             "cheaper_than_anchor": constraints.get("cheaper_than_anchor"),

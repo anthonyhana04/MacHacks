@@ -202,12 +202,15 @@ async def fetch_pois(
     limit: int = 8,
 ) -> list[dict]:
     """Fetch points of interest near a destination using Google Places API."""
+    print(f"DEBUG: Fetching POIs for {lat}, {lng} using Key: {GOOGLE_PLACES_API_KEY[:10]}...")
     if not GOOGLE_PLACES_API_KEY:
+        print("DEBUG: No API key found, returning mock POIs")
         return _mock_pois(lat, lng)
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             url = "https://places.googleapis.com/v1/places:searchNearby"
+            print(f"DEBUG: URL: {url}")
             headers = {
                 "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
                 "X-Goog-FieldMask": "places.displayName,places.location,places.rating,places.types,places.photos,places.id",
@@ -231,20 +234,32 @@ async def fetch_pois(
             }
 
             resp = await client.post(url, json=body, headers=headers)
+            print(f"DEBUG: Google Places API Status: {resp.status_code}")
             if resp.status_code == 200:
                 data = resp.json()
                 places = data.get("places", [])
-                return [
-                    {
+                print(f"DEBUG: Found {len(places)} places")
+                
+                results = []
+                for p in places:
+                    photo_url = None
+                    photos = p.get("photos", [])
+                    if photos and len(photos) > 0:
+                        photo_name = photos[0].get("name")
+                        if photo_name:
+                            # Construct the new Google Places Photo Media URL
+                            photo_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=400&maxWidthPx=400&key={GOOGLE_PLACES_API_KEY}"
+
+                    results.append({
                         "place_id": p.get("id", ""),
                         "name": p.get("displayName", {}).get("text", "Unknown"),
                         "type": p.get("types", ["place"])[0] if p.get("types") else "place",
                         "lat": p.get("location", {}).get("latitude", lat),
                         "lng": p.get("location", {}).get("longitude", lng),
                         "rating": p.get("rating", 0),
-                    }
-                    for p in places
-                ]
+                        "photo_url": photo_url,
+                    })
+                return results
             else:
                 print(f"Places API error: {resp.status_code} {resp.text}")
                 return _mock_pois(lat, lng)

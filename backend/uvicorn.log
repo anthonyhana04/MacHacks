@@ -1,0 +1,44 @@
+INFO:     Will watch for changes in these directories: ['/Users/anth/Desktop/projects/travel/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [31148] using WatchFiles
+INFO:     Started server process [31170]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:63755 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63761 - "HEAD /health HTTP/1.1" 405 Method Not Allowed
+INFO:     127.0.0.1:63757 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63776 - "OPTIONS /api/recommend HTTP/1.1" 200 OK
+LLM intent parsing failed, using keyword parser: Expecting value: line 2 column 12 (char 13)
+LLM enrichment error, using template fallback: Unterminated string starting at: line 28 column 7 (char 2878)
+DEBUG: Fetching POIs for 48.2082, 16.3738 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+DEBUG: Fetching POIs for 44.8378, -0.5792 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+DEBUG: Fetching POIs for -34.6037, -58.3816 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+INFO:     127.0.0.1:63776 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63776 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63776 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63819 - "GET /api/suggestions HTTP/1.1" 200 OK
+LLM intent parsing failed, using keyword parser: Expecting value: line 2 column 12 (char 13)
+DEBUG: Fetching POIs for 38.7223, -9.1393 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+DEBUG: Fetching POIs for 14.7167, -17.4677 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+DEBUG: Fetching POIs for 5.6037, -0.187 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+INFO:     127.0.0.1:63822 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63822 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63822 - "GET /api/suggestions HTTP/1.1" 200 OK

@@ -81,7 +81,7 @@ async def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
         db=db,
         parsed_intent=parsed_intent,
         query_embedding=query_embedding if query_embedding else None,
-        top_k=5,
+        top_k=3,
     )
 
     if not scored_destinations:
