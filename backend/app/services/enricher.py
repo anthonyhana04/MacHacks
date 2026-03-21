@@ -8,7 +8,7 @@ from google import genai
 from app.config import GEMINI_API_KEY, GOOGLE_PLACES_API_KEY, YOUTUBE_API_KEY
 
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-3.1-flash-lite-preview"
 
 ENRICHMENT_PROMPT = """You are a travel expert and creative writer. Given a user's travel vibe and a list of matching destinations, generate enrichment content for each destination.
 
@@ -53,9 +53,9 @@ async def enrich_destinations(
             "id": dest.id,
             "name": dest.name,
             "country": dest.country,
-            "vibe_tags": [v.vibe_tag for v in dest.vibes],
+            "vibe_tags": dest.vibe_tags,
             "budget_tier": dest.budget_tier,
-            "vibe_description": dest.vibe_description,
+            "vibe_description": getattr(dest, "vibe_description", f"{dest.name} is a wonderful place to visit."),
         })
 
     # Try LLM enrichment
@@ -108,14 +108,15 @@ def _fallback_enrichment(prompt: str, parsed_intent: dict, scored_destinations: 
 
     for item in scored_destinations:
         dest = item["destination"]
-        dest_vibes = [v.vibe_tag for v in dest.vibes]
-        dest_pois = [p.poi_type for p in dest.poi_types]
+        dest_vibes = dest.vibe_tags
+        dest_pois = getattr(dest, "poi_types", ["landmark", "restaurant", "cafe"])
 
         # Build "why it matches" from vibe description + tag overlap
         matching_vibes = set(vibes) & set(dest_vibes)
         vibe_str = ", ".join(list(matching_vibes)[:4]) if matching_vibes else ", ".join(dest_vibes[:3])
+        vibe_desc = getattr(dest, "vibe_description", f"{dest.name} is a wonderful place to visit.")
 
-        why = f"{dest.name} captures the essence of what you're looking for — {dest.vibe_description.split('.')[0].lower()}."
+        why = f"{dest.name} captures the essence of what you're looking for — {vibe_desc.split('.')[0].lower()}."
         if matching_vibes:
             why += f" It matches your vibe for {vibe_str}."
 
@@ -200,6 +201,7 @@ async def fetch_pois(
     lng: float,
     poi_types: list[str] | None = None,
     limit: int = 8,
+    max_food: int = 3,
 ) -> list[dict]:
     """Fetch points of interest near a destination using Google Places API."""
     print(f"DEBUG: Fetching POIs for {lat}, {lng} using Key: {GOOGLE_PLACES_API_KEY[:10]}...")
@@ -213,7 +215,7 @@ async def fetch_pois(
             print(f"DEBUG: URL: {url}")
             headers = {
                 "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
-                "X-Goog-FieldMask": "places.displayName,places.location,places.rating,places.types,places.photos,places.id",
+                "X-Goog-FieldMask": "places.displayName,places.location,places.rating,places.types,places.photos,places.id,places.editorialSummary",
             }
 
             # Map our POI types to Google's types
@@ -229,7 +231,7 @@ async def fetch_pois(
                     }
                 },
                 "includedTypes": included_types[:5],  # API limit
-                "maxResultCount": limit,
+                "maxResultCount": 20, # Fetch more to allow for filtering
                 "languageCode": "en",
             }
 
@@ -241,7 +243,18 @@ async def fetch_pois(
                 print(f"DEBUG: Found {len(places)} places")
                 
                 results = []
+                food_count = 0
                 for p in places:
+                    p_types = p.get("types", [])
+                    if "fast_food_restaurant" in p_types or "meal_takeaway" in p_types:
+                        continue
+                        
+                    is_food = any(t in p_types for t in ["restaurant", "cafe", "bakery", "meal_delivery", "food", "bar"])
+                    if is_food:
+                        if food_count >= max_food:
+                            continue
+                        food_count += 1
+                        
                     photo_url = None
                     photos = p.get("photos", [])
                     if photos and len(photos) > 0:
@@ -258,7 +271,12 @@ async def fetch_pois(
                         "lng": p.get("location", {}).get("longitude", lng),
                         "rating": p.get("rating", 0),
                         "photo_url": photo_url,
+                        "editorial_summary": p.get("editorialSummary", {}).get("text", "")
                     })
+                    
+                    if len(results) >= limit:
+                        break
+                        
                 return results
             else:
                 print(f"Places API error: {resp.status_code} {resp.text}")
@@ -268,6 +286,69 @@ async def fetch_pois(
         print(f"POI fetch error: {e}")
         return _mock_pois(lat, lng)
 
+async def fill_missing_descriptions(pois: list[dict], dest_name: str) -> list[dict]:
+    """Use an LLM pass to write 1-2 sentence descriptions for POIs missing native editorial summaries."""
+    if not client or not GEMINI_API_KEY:
+        return pois
+        
+    missing = [p for p in pois if not p.get("editorial_summary")]
+    if not missing:
+        return pois
+        
+    prompt = f"Write a 1-2 sentence enticing travel description for these specific places in {dest_name}. Return ONLY a strict JSON object mapping the exact place_id to the description string.\n\nPlaces:\n"
+    for p in missing:
+        prompt += f"- ID: {p['place_id']} | Name: {p['name']} | Type: {p['type']}\n"
+        
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                temperature=0.7,
+                response_mime_type="application/json",
+            ),
+        )
+        content = response.text
+        data = json.loads(content)
+        
+        for p in pois:
+            if p["place_id"] in data:
+                p["editorial_summary"] = data[p["place_id"]]
+                
+    except Exception as e:
+        print(f"Fill descriptions error: {e}")
+        
+    return pois
+
+async def fetch_destination_photo(name: str, country: str) -> str | None:
+    """Fetch the top photo for a city using Google Places API."""
+    if not GOOGLE_PLACES_API_KEY:
+        return None
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            url = "https://places.googleapis.com/v1/places:searchText"
+            headers = {
+                "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+                "X-Goog-FieldMask": "places.photos",
+            }
+            body = {
+                "textQuery": f"{name} {country} points of interest",
+                "maxResultCount": 1,
+                "languageCode": "en",
+            }
+            resp = await client.post(url, json=body, headers=headers)
+            if resp.status_code == 200:
+                data = resp.json()
+                places = data.get("places", [])
+                if places and "photos" in places[0]:
+                    photo_name = places[0]["photos"][0].get("name")
+                    if photo_name:
+                        return f"https://places.googleapis.com/v1/{photo_name}/media?maxHeightPx=800&maxWidthPx=1200&key={GOOGLE_PLACES_API_KEY}"
+            return None
+    except Exception as e:
+        print(f"Destination photo fetch error: {e}")
+        return None
 
 async def fetch_youtube_videos(
     destination_name: str,

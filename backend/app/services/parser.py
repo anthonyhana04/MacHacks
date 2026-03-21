@@ -8,7 +8,7 @@ from google import genai
 from app.config import GEMINI_API_KEY
 
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-3.1-flash-lite-preview"
 
 SYSTEM_PROMPT = """You are a travel intent parser. Given a user's natural language travel desire,
 extract structured intent as JSON. Be liberal in interpretation — users are vague.

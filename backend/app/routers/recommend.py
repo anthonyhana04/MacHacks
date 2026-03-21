@@ -11,11 +11,10 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.models import Destination, ResponseCache, QueryLog
+from app.models.models import ResponseCache, QueryLog
 from app.services.parser import parse_intent
-from app.services.ranker import rank_destinations
-from app.services.enricher import enrich_destinations, fetch_pois, fetch_youtube_videos
-from app.services.embeddings import generate_query_embedding
+from app.services.enricher import enrich_destinations, fetch_pois, fetch_youtube_videos, fetch_destination_photo, fill_missing_descriptions
+from app.services.generator import generate_realtime_destinations
 
 router = APIRouter()
 
@@ -72,17 +71,15 @@ async def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
 
     # Step 2: Parse intent (LLM call #1)
     parsed_intent = parse_intent(prompt)
+    
+    duration_val = parsed_intent.get("constraints", {}).get("trip_length_days")
+    if duration_val is None or not isinstance(duration_val, (int, float)):
+        duration_days = 3
+    else:
+        duration_days = min(7, max(1, int(duration_val)))
 
-    # Step 3: Generate query embedding
-    query_embedding = generate_query_embedding(parsed_intent)
-
-    # Step 4: Rank destinations (algorithmic — no LLM)
-    scored_destinations = rank_destinations(
-        db=db,
-        parsed_intent=parsed_intent,
-        query_embedding=query_embedding if query_embedding else None,
-        top_k=3,
-    )
+    # Step 3: Generate real-time destinations (LLM call #2)
+    scored_destinations = await generate_realtime_destinations(prompt, parsed_intent)
 
     if not scored_destinations:
         elapsed = int((time.time() - start_time) * 1000)
@@ -93,8 +90,8 @@ async def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
         }
 
     # Step 5: Enrich (LLM call #2 + API calls — in parallel)
-    enrichment_map, pois_map, media_map = await _enrich_parallel(
-        prompt, parsed_intent, scored_destinations
+    enrichment_map, pois_map, media_map, photo_map = await _enrich_parallel(
+        prompt, parsed_intent, scored_destinations, duration_days
     )
 
     # Step 6: Assemble response
@@ -106,6 +103,7 @@ async def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
         enrichment = enrichment_map.get(dest_id, {})
         pois = pois_map.get(dest_id, [])
         media = media_map.get(dest_id, [])
+        hero_photo = photo_map.get(dest_id)
 
         destinations_response.append({
             "id": dest.id,
@@ -113,11 +111,12 @@ async def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
             "country": dest.country,
             "region": dest.region,
             "match_score": item["score"],
-            "hero_image_url": dest.hero_image_url,
+            "hero_image_url": hero_photo or dest.hero_image_url,
             "budget_tier": dest.budget_tier,
+            "duration_days": duration_days,
             "best_seasons": dest.best_seasons or [],
             "coordinates": {"lat": dest.lat, "lng": dest.lng},
-            "vibe_tags": [v.vibe_tag for v in dest.vibes],
+            "vibe_tags": dest.vibe_tags,
             "why_it_matches": enrichment.get("why_it_matches", f"{dest.name} matches your vibe."),
             "mini_itinerary": enrichment.get("mini_itinerary", []),
             "neighborhood_highlight": enrichment.get("neighborhood_highlight", ""),
@@ -163,7 +162,7 @@ async def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
     return response
 
 
-async def _enrich_parallel(prompt, parsed_intent, scored_destinations):
+async def _enrich_parallel(prompt, parsed_intent, scored_destinations, duration_days: int):
     """Run enrichment LLM call, POI fetches, and media fetches in parallel."""
     vibes = parsed_intent.get("vibes", [])
     poi_prefs = parsed_intent.get("poi_preferences", [])
@@ -173,9 +172,17 @@ async def _enrich_parallel(prompt, parsed_intent, scored_destinations):
 
     poi_tasks = {}
     media_tasks = {}
+    photo_tasks = {}
+    
+    async def fetch_and_fill(lat, lng, poi_prefs, limit, max_food, dest_name):
+        pois = await fetch_pois(lat, lng, poi_prefs, limit=limit, max_food=max_food)
+        return await fill_missing_descriptions(pois, dest_name)
+    
+    poi_limit = min(20, duration_days * 4)
     for item in scored_destinations:
         dest = item["destination"]
-        poi_tasks[dest.id] = fetch_pois(dest.lat, dest.lng, poi_prefs or None, limit=6)
+        poi_tasks[dest.id] = fetch_and_fill(dest.lat, dest.lng, poi_prefs or None, limit=poi_limit, max_food=duration_days, dest_name=dest.name)
+        photo_tasks[dest.id] = fetch_destination_photo(dest.name, dest.country)
         media_tasks[dest.id] = fetch_youtube_videos(
             f"{dest.name} {dest.country}",
             vibes[:3] if vibes else None,
@@ -200,8 +207,16 @@ async def _enrich_parallel(prompt, parsed_intent, scored_destinations):
         except Exception as e:
             print(f"Media fetch error for {dest_id}: {e}")
             media_results[dest_id] = []
+            
+    photo_results = {}
+    for dest_id, task in photo_tasks.items():
+        try:
+            photo_results[dest_id] = await task
+        except Exception as e:
+            print(f"Photo fetch error for {dest_id}: {e}")
+            photo_results[dest_id] = None
 
-    return enrichment_result, pois_results, media_results
+    return enrichment_result, pois_results, media_results, photo_results
 
 
 @router.get("/destination/{destination_id}")

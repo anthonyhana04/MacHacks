@@ -67,7 +67,7 @@ def generate_batch(existing_names: set, client: genai.Client, batch_size: int = 
 
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-3.1-flash-lite-preview',
             contents=prompt,
             config=genai.types.GenerateContentConfig(
                 response_mime_type="application/json",

@@ -1,44 +1,147 @@
 INFO:     Will watch for changes in these directories: ['/Users/anth/Desktop/projects/travel/backend']
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [31148] using WatchFiles
-INFO:     Started server process [31170]
+INFO:     Started reloader process [35081] using WatchFiles
+INFO:     Started server process [35084]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:63755 - "GET /api/suggestions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63761 - "HEAD /health HTTP/1.1" 405 Method Not Allowed
-INFO:     127.0.0.1:63757 - "GET /api/suggestions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63776 - "OPTIONS /api/recommend HTTP/1.1" 200 OK
-LLM intent parsing failed, using keyword parser: Expecting value: line 2 column 12 (char 13)
-LLM enrichment error, using template fallback: Unterminated string starting at: line 28 column 7 (char 2878)
-DEBUG: Fetching POIs for 48.2082, 16.3738 using Key: AIzaSyDUyg...
+INFO:     127.0.0.1:64781 - "OPTIONS /api/recommend HTTP/1.1" 200 OK
+LLM intent parsing failed, using keyword parser: Expecting property name enclosed in double quotes: line 2 column 3 (char 4)
+DEBUG: Fetching POIs for 51.1784, -115.5708 using Key: AIzaSyDUyg...
 DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
 DEBUG: Google Places API Status: 200
 DEBUG: Found 6 places
-DEBUG: Fetching POIs for 44.8378, -0.5792 using Key: AIzaSyDUyg...
+DEBUG: Fetching POIs for 52.8737, -118.0814 using Key: AIzaSyDUyg...
 DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
 DEBUG: Google Places API Status: 200
 DEBUG: Found 6 places
-DEBUG: Fetching POIs for -34.6037, -58.3816 using Key: AIzaSyDUyg...
+DEBUG: Fetching POIs for 50.1163, -122.9574 using Key: AIzaSyDUyg...
 DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
 DEBUG: Google Places API Status: 200
 DEBUG: Found 6 places
-INFO:     127.0.0.1:63776 - "POST /api/recommend HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63776 - "GET /api/suggestions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63776 - "GET /api/suggestions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63819 - "GET /api/suggestions HTTP/1.1" 200 OK
-LLM intent parsing failed, using keyword parser: Expecting value: line 2 column 12 (char 13)
-DEBUG: Fetching POIs for 38.7223, -9.1393 using Key: AIzaSyDUyg...
+INFO:     127.0.0.1:64781 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64781 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64781 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64781 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64783 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64783 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64783 - "GET /api/suggestions HTTP/1.1" 200 OK
+LLM intent parsing failed, using keyword parser: Expecting property name enclosed in double quotes: line 3 column 5 (char 20)
+LLM enrichment error, using template fallback: Unterminated string starting at: line 19 column 7 (char 2184)
+DEBUG: Fetching POIs for 51.1784, -115.5708 using Key: AIzaSyDUyg...
 DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
 DEBUG: Google Places API Status: 200
 DEBUG: Found 6 places
-DEBUG: Fetching POIs for 14.7167, -17.4677 using Key: AIzaSyDUyg...
+DEBUG: Fetching POIs for 50.1163, -122.9574 using Key: AIzaSyDUyg...
 DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
 DEBUG: Google Places API Status: 200
 DEBUG: Found 6 places
-DEBUG: Fetching POIs for 5.6037, -0.187 using Key: AIzaSyDUyg...
+DEBUG: Fetching POIs for 52.8737, -118.0825 using Key: AIzaSyDUyg...
 DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
 DEBUG: Google Places API Status: 200
 DEBUG: Found 6 places
-INFO:     127.0.0.1:63822 - "POST /api/recommend HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63822 - "GET /api/suggestions HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63822 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64854 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64854 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64854 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64876 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64876 - "GET /api/suggestions HTTP/1.1" 200 OK
+LLM intent parsing failed, using keyword parser: Expecting property name enclosed in double quotes: line 3 column 5 (char 20)
+LLM enrichment error, using template fallback: Unterminated string starting at: line 30 column 7 (char 3777)
+DEBUG: Fetching POIs for 51.1784, -115.5708 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+DEBUG: Fetching POIs for 52.8737, -118.0827 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+DEBUG: Fetching POIs for 50.1163, -122.9574 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+INFO:     127.0.0.1:64901 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64901 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64901 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64952 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64958 - "OPTIONS /api/recommend HTTP/1.1" 200 OK
+LLM intent parsing failed, using keyword parser: Expecting property name enclosed in double quotes: line 20 column 1 (char 340)
+LLM enrichment error, using template fallback: Unterminated string starting at: line 32 column 7 (char 3617)
+DEBUG: Fetching POIs for 51.5074, -0.1278 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+DEBUG: Fetching POIs for 55.9533, -3.1883 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+DEBUG: Fetching POIs for 47.6062, -122.3321 using Key: AIzaSyDUyg...
+DEBUG: URL: https://places.googleapis.com/v1/places:searchNearby
+DEBUG: Google Places API Status: 200
+DEBUG: Found 6 places
+INFO:     127.0.0.1:64958 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64958 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64958 - "GET /api/suggestions HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/services/generator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [35084]
+WARNING:  WatchFiles detected changes in 'app/services/enricher.py'. Reloading...
+INFO:     Started server process [36179]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [36190]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/services/generator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36190]
+WARNING:  WatchFiles detected changes in 'app/services/enricher.py'. Reloading...
+INFO:     Started server process [36250]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [36255]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:65095 - "OPTIONS /api/recommend HTTP/1.1" 200 OK
+Failed to generate realtime destinations: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-3.1-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}
+INFO:     127.0.0.1:65095 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65095 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65095 - "GET /api/suggestions HTTP/1.1" 200 OK
+Failed to generate realtime destinations: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-3.1-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}
+INFO:     127.0.0.1:65097 - "POST /api/recommend HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65097 - "GET /api/suggestions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65097 - "GET /api/suggestions HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/services/enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36255]
+INFO:     Started server process [36445]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/services/generator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36445]
+INFO:     Started server process [36453]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/services/parser.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36453]
+INFO:     Started server process [36464]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'app/data/generate_more_destinations.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [36464]
+INFO:     Started server process [36475]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
