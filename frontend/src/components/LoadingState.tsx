@@ -4,16 +4,12 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 const LOADING_MESSAGES = [
-  "Scanning vibes...",
-  "Cross-referencing cozy with walkable...",
-  "Consulting the vibe oracle...",
-  "Mapping emotional terrain...",
-  "Compiling your vibe...",
-  "Finding hidden gems...",
-  "Checking cobblestone density...",
-  "Measuring cafe-per-street ratio...",
-  "Analyzing rainy-day charm factor...",
-  "Calibrating wanderlust engine...",
+  "Building your itinerary...",
+  "Finding ideal routes...",
+  "Curating top destinations...",
+  "Tailoring experiences...",
+  "Compiling travel paths...",
+  "Finalizing schedule...",
 ];
 
 export default function LoadingState() {
@@ -36,50 +32,20 @@ export default function LoadingState() {
         maxWidth: "400px",
       }}
     >
-      {/* Animated orb */}
-      <div style={{ position: "relative", width: "80px", height: "80px" }}>
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.5, 1, 0.5],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: "50%",
-            background: "var(--gradient-primary)",
-            filter: "blur(20px)",
-          }}
-        />
+      {/* Elegant Spinner */}
+      <div style={{ position: "relative", width: "60px", height: "60px", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-          style={{
-            position: "absolute",
-            inset: "10px",
-            borderRadius: "50%",
-            border: "2px solid transparent",
-            borderTopColor: "var(--accent-purple)",
-            borderRightColor: "var(--accent-pink)",
-          }}
-        />
-        <div
+          transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
           style={{
             position: "absolute",
             inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "28px",
+            borderRadius: "50%",
+            border: "3px solid var(--border-subtle)",
+            borderTopColor: "var(--accent-purple)",
+            borderRightColor: "var(--accent-cyan)",
           }}
-        >
-          🔮
-        </div>
+        />
       </div>
 
       {/* Loading message */}
@@ -98,26 +64,6 @@ export default function LoadingState() {
         {LOADING_MESSAGES[messageIndex]}
       </motion.p>
 
-      {/* Shimmer cards */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-          width: "100%",
-        }}
-      >
-        {[0, 1, 2].map((i) => (
-          <div
-            key={i}
-            className="shimmer"
-            style={{
-              height: "72px",
-              opacity: 1 - i * 0.25,
-            }}
-          />
-        ))}
-      </div>
     </div>
   );
 }

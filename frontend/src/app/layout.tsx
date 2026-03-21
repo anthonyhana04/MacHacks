@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vibe Compiler — AI Trip Planner",
+  title: "ocio — AI Trip Planner",
   description: "Turn messy travel vibes into real destinations. A vibe compiler for travel.",
 };
 

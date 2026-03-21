@@ -88,7 +88,7 @@ export default function SearchSection({ onSearch, compact }: SearchSectionProps)
             whiteSpace: "nowrap",
           }}
         >
-          🔮 Compile
+          Search
         </button>
       </form>
     );
@@ -159,7 +159,7 @@ export default function SearchSection({ onSearch, compact }: SearchSectionProps)
             gap: "8px",
           }}
         >
-          <span>🔮</span> Compile my vibe
+          Search my vibe
         </motion.button>
       </form>
 

@@ -2,39 +2,39 @@
 @import "tailwindcss";
 
 :root {
-  /* ─── Tropical Night Palette ─── */
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #0F172A;
-  --bg-card: rgba(15, 23, 42, 0.80);
-  --bg-card-hover: rgba(30, 41, 59, 0.85);
-  --bg-glass: rgba(15, 23, 42, 0.75);
+  /* ─── Earth Explorer Palette ─── */
+  --bg-primary: #FDFBF7;
+  --bg-secondary: #FFFFFF;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --bg-glass: rgba(253, 251, 247, 0.80);
 
-  --text-primary: #f0f0f5;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
 
   /* Core accents */
-  --accent-cyan: #06B6D4;
-  --accent-cyan-dim: rgba(6, 182, 212, 0.15);
-  --accent-coral: #FB7185;
-  --accent-coral-dim: rgba(251, 113, 133, 0.15);
-  --accent-purple: #8B5CF6;
-  --accent-purple-dim: rgba(139, 92, 246, 0.15);
+  --accent-cyan: #42F2F5; 
+  --accent-cyan-dim: rgba(66, 242, 245, 0.15);
+  --accent-coral: #5CBE7D; 
+  --accent-coral-dim: rgba(92, 190, 125, 0.15);
+  --accent-purple: #1E884B; 
+  --accent-purple-dim: rgba(30, 136, 75, 0.15);
 
   /* Legacy aliases (keep old components working) */
-  --accent-pink: #FB7185;
-  --accent-blue: #3b82f6;
-  --accent-teal: #06B6D4;
+  --accent-pink: #5CBE7D;
+  --accent-blue: #42F2F5;
+  --accent-teal: #94F7B2;
 
-  --border-subtle: rgba(255, 255, 255, 0.10);
-  --border-accent: rgba(6, 182, 212, 0.35);
-  --border-coral: rgba(251, 113, 133, 0.35);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-accent: rgba(30, 136, 75, 0.25);
+  --border-coral: rgba(92, 190, 125, 0.25);
 
-  --gradient-primary: linear-gradient(135deg, #06B6D4 0%, #8B5CF6 50%, #FB7185 100%);
-  --gradient-card: linear-gradient(135deg, rgba(6, 182, 212, 0.06) 0%, rgba(251, 113, 133, 0.04) 100%);
-  --shadow-glow: 0 0 40px rgba(6, 182, 212, 0.18);
-  --shadow-cyan: 0 0 24px rgba(6, 182, 212, 0.25);
-  --shadow-coral: 0 0 24px rgba(251, 113, 133, 0.20);
+  --gradient-primary: #1E884B;
+  --gradient-card: linear-gradient(135deg, rgba(148, 247, 178, 0.04) 0%, rgba(92, 190, 125, 0.04) 100%);
+  --shadow-glow: 0 8px 32px rgba(30, 136, 75, 0.08);
+  --shadow-cyan: 0 4px 20px rgba(66, 242, 245, 0.15);
+  --shadow-coral: 0 4px 20px rgba(92, 190, 125, 0.15);
 
   --radius-lg: 16px;
   --radius-md: 12px;
@@ -80,11 +80,19 @@ body {
   position: fixed;
   inset: 0;
   background-image:
-    radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.04) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(251, 113, 133, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.02) 0%, transparent 60%);
+    radial-gradient(circle at 20% 30%, rgba(66, 242, 245, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(92, 190, 125, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(148, 247, 178, 0.02) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
+}
+.bg-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.5;
 }
 
 /* Shimmer animation for loading */
@@ -119,19 +127,19 @@ body {
 
 /* Cyan glow pulse for CTA */
 @keyframes cyan-glow {
-  0%, 100% { box-shadow: 0 0 16px rgba(6, 182, 212, 0.25); }
-  50% { box-shadow: 0 0 28px rgba(6, 182, 212, 0.45); }
+  0%, 100% { box-shadow: var(--shadow-cyan); }
+  50% { box-shadow: 0 0 28px rgba(66, 242, 245, 0.35); }
 }
 .cyan-glow {
   animation: cyan-glow 2.5s ease-in-out infinite;
 }
 
-/* Mapbox overrides */
+/* Mapbox overrides for light mode */
 .mapboxgl-canvas {
   border-radius: var(--radius-md);
 }
 .mapboxgl-popup-content {
-  background: rgba(15, 23, 42, 0.92) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   color: var(--text-primary) !important;
   border: 1px solid var(--border-subtle) !important;
   border-radius: var(--radius-sm) !important;
@@ -139,18 +147,19 @@ body {
   font-family: 'Inter', sans-serif !important;
   font-size: 13px !important;
   backdrop-filter: blur(16px) !important;
+  box-shadow: var(--shadow-glow) !important;
 }
 .mapboxgl-popup-tip {
-  border-top-color: rgba(15, 23, 42, 0.92) !important;
+  border-top-color: rgba(255, 255, 255, 0.95) !important;
 }
 .mapboxgl-ctrl-attrib {
   display: none !important;
 }
 .mapboxgl-ctrl-group {
-  background: rgba(15, 23, 42, 0.85) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
   border: 1px solid var(--border-subtle) !important;
   border-radius: var(--radius-sm) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
   backdrop-filter: blur(12px) !important;
 }
 .mapboxgl-ctrl-group button {
@@ -160,5 +169,5 @@ body {
   border-top: 1px solid var(--border-subtle) !important;
 }
 .mapboxgl-ctrl-group button span {
-  filter: invert(1) !important;
+  filter: none !important;
 }

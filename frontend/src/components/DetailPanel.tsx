@@ -24,6 +24,7 @@ interface Destination {
     lat: number;
     lng: number;
     rating: number;
+    photo_url: string | null;
   }>;
   media: Array<{
     video_id: string;
@@ -243,8 +244,8 @@ export default function DetailPanel({ destination }: DetailPanelProps) {
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
-                gap: "8px",
-                marginTop: "12px",
+                gap: "12px",
+                marginTop: "16px",
               }}
             >
               {destination.pois.map((poi) => (
@@ -253,26 +254,56 @@ export default function DetailPanel({ destination }: DetailPanelProps) {
                   style={{
                     background: "var(--bg-card)",
                     border: "1px solid var(--border-subtle)",
-                    borderRadius: "var(--radius-sm)",
-                    padding: "10px 12px",
+                    borderRadius: "var(--radius-md)",
+                    padding: "0",
                     display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                    transition: "transform 0.2s ease",
                   }}
                 >
-                  <span style={{ fontSize: "16px" }}>{getPoiEmoji(poi.type)}</span>
-                  <div>
+                  {poi.photo_url ? (
+                    <img
+                      src={poi.photo_url}
+                      alt={poi.name}
+                      style={{
+                        width: "100%",
+                        height: "100px",
+                        objectFit: "cover",
+                        borderBottom: "1px solid var(--border-subtle)",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "100px",
+                        background: "var(--bg-subtle)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "24px",
+                        borderBottom: "1px solid var(--border-subtle)",
+                      }}
+                    >
+                      {getPoiEmoji(poi.type)}
+                    </div>
+                  )}
+                  <div style={{ padding: "10px 12px" }}>
                     <p
                       style={{
                         fontSize: "13px",
                         color: "var(--text-primary)",
-                        fontWeight: 500,
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
                       }}
                     >
                       {poi.name}
                     </p>
                     <p style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                      {poi.type} · ⭐ {poi.rating}
+                      {poi.type.split('_').join(' ')} · ⭐ {poi.rating}
                     </p>
                   </div>
                 </div>

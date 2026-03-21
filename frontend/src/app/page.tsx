@@ -8,40 +8,117 @@ import ItinerarySwitcher from "@/components/ItinerarySwitcher";
 import ItinerarySummaryCard from "@/components/ItinerarySummaryCard";
 import LocationDetailCard from "@/components/LocationDetailCard";
 import ItineraryMapView from "@/components/ItineraryMapView";
-import {
-  MOCK_ITINERARIES,
-  type ItineraryStop,
-} from "@/data/mockItineraries";
+import { type Itinerary, type ItineraryStop } from "@/types";
 
-type ViewState = "hero" | "loading" | "itinerary";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+type ViewState = "hero" | "loading" | "itinerary" | "error";
 
 export default function Home() {
   const [view, setView] = useState<ViewState>("hero");
   const [error, setError] = useState<string | null>(null);
 
-  // Itinerary state
-  const [activeItineraryId, setActiveItineraryId] = useState<string>(
-    MOCK_ITINERARIES[0].id
-  );
+  // Store real backend data mapped to itineraries
+  const [itineraries, setItineraries] = useState<Itinerary[]>([]);
+  const [activeItineraryId, setActiveItineraryId] = useState<string>("");
   const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null);
-  const [savedItineraries, setSavedItineraries] = useState<Set<string>>(
-    new Set()
-  );
 
-  const activeItinerary =
-    MOCK_ITINERARIES.find((it) => it.id === activeItineraryId) ||
-    MOCK_ITINERARIES[0];
+  const activeItinerary = itineraries.find((it) => it.id === activeItineraryId) || itineraries[0];
 
-  const handleSearch = useCallback(async (_prompt: string) => {
+  const handleSearch = useCallback(async (prompt: string) => {
     setView("loading");
     setError(null);
     setSelectedStop(null);
+    setItineraries([]);
 
-    // Simulate API delay, then show itinerary view with mock data
-    setTimeout(() => {
-      setActiveItineraryId(MOCK_ITINERARIES[0].id);
-      setView("itinerary");
-    }, 1800);
+    try {
+      const res = await fetch(`${API_BASE}/api/recommend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      // Map backend Destinations to Itineraries
+      const newItineraries: Itinerary[] = data.destinations.map((dest: any) => {
+        let fallbackImage = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1";
+        if (dest.media && dest.media.length > 0 && dest.media[0].thumbnail) {
+          fallbackImage = dest.media[0].thumbnail;
+        }
+
+        const tripLengthDays = dest.duration_days || 3;
+
+        return {
+          id: dest.id,
+          title: dest.name,
+          mainImage: dest.hero_image_url || fallbackImage,
+          days: tripLengthDays,
+          totalCost: dest.budget_tier,
+          stops: dest.pois.map((poi: any, idx: number) => {
+            const typeStr = (poi.type || "").toLowerCase();
+            let durationStr = "2 hours";
+            let timeLabel = "Activity";
+
+            if (typeStr.includes("restaurant") || typeStr.includes("food") || typeStr.includes("meal")) {
+              durationStr = "1.5 hours";
+              timeLabel = idx % 2 === 0 ? "Lunch" : "Dinner";
+            } else if (typeStr.includes("cafe") || typeStr.includes("coffee") || typeStr.includes("bakery")) {
+              durationStr = "45 mins";
+              timeLabel = "Morning Coffee";
+            } else if (typeStr.includes("museum") || typeStr.includes("art") || typeStr.includes("gallery")) {
+              durationStr = "3 hours";
+              timeLabel = "Morning Activity";
+            } else if (typeStr.includes("park") || typeStr.includes("nature") || typeStr.includes("hike")) {
+              durationStr = "2-3 hours";
+              timeLabel = "Afternoon Activity";
+            } else if (typeStr.includes("bar") || typeStr.includes("night") || typeStr.includes("club")) {
+              durationStr = "2 hours";
+              timeLabel = "Evening Drink";
+            } else {
+              durationStr = "1-2 hours";
+              timeLabel = idx % 2 === 0 ? "Morning Activity" : "Afternoon Activity";
+            }
+
+            const maxDays = tripLengthDays;
+            const poisPerDay = Math.max(1, Math.ceil(dest.pois.length / maxDays));
+            const dayNum = Math.min(Math.floor(idx / poisPerDay) + 1, maxDays);
+
+            const formattedType = poi.type ? poi.type.replace(/_/g, " ").charAt(0).toUpperCase() + poi.type.slice(1).replace(/_/g, " ") : "Point of Interest";
+
+            return {
+              id: poi.place_id || `poi-${idx}`,
+              name: poi.name,
+              description: poi.editorial_summary || formattedType,
+              time: `Day ${dayNum} • ${timeLabel} (${durationStr})`,
+              duration: durationStr,
+              lat: poi.lat,
+              lng: poi.lng,
+              image: poi.photo_url || fallbackImage,
+              rating: poi.rating
+            };
+          }),
+          media: dest.media || []
+        };
+      });
+
+      setItineraries(newItineraries);
+      if (newItineraries.length > 0) {
+        setActiveItineraryId(newItineraries[0].id);
+        setView("itinerary");
+      } else {
+        setError("No destinations found matching that vibe.");
+        setView("error");
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      setError("Something went wrong while compiling your vibe. Please try again.");
+      setView("error");
+    }
   }, []);
 
   const handleSwitchItinerary = useCallback((id: string) => {
@@ -58,28 +135,16 @@ export default function Home() {
   }, []);
 
   const handleNextDestination = useCallback(() => {
-    if (!selectedStop) return;
+    if (!selectedStop || !activeItinerary) return;
     const currentIndex = activeItinerary.stops.findIndex(
       (s) => s.id === selectedStop.id
     );
     if (currentIndex < activeItinerary.stops.length - 1) {
       setSelectedStop(activeItinerary.stops[currentIndex + 1]);
     }
-  }, [selectedStop, activeItinerary.stops]);
+  }, [selectedStop, activeItinerary]);
 
-  const handleAddItinerary = useCallback((id: string) => {
-    setSavedItineraries((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
-
-  const selectedStopIndex = selectedStop
+  const selectedStopIndex = selectedStop && activeItinerary
     ? activeItinerary.stops.findIndex((s) => s.id === selectedStop.id)
     : -1;
 
@@ -100,8 +165,7 @@ export default function Home() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          borderBottom:
-            view === "itinerary" ? "none" : "1px solid var(--border-subtle)",
+          borderBottom: "none",
           position: view === "itinerary" ? "absolute" : "relative",
           top: 0,
           left: 0,
@@ -109,38 +173,82 @@ export default function Home() {
           zIndex: 20,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "22px" }}>✦</span>
-          <h1
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: "22px",
-              fontWeight: 700,
-              background: "var(--gradient-primary)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              letterSpacing: "-0.5px",
-            }}
-          >
-            Vibe Compiler
-          </h1>
+        <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => setView("hero")}>
+          <img src="/ocio2.png" alt="Ocio Logo" style={{ height: "44px", width: "auto", objectFit: "contain" }} />
         </div>
 
         {view === "itinerary" && (
-          <div style={{ flex: 1, maxWidth: "400px", margin: "0 20px" }}>
+          <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", width: "400px" }}>
             <SearchSection onSearch={handleSearch} compact />
           </div>
         )}
 
-        <span
-          style={{
-            fontSize: "13px",
-            color: "var(--text-muted)",
-            fontWeight: 400,
-          }}
-        >
-          AI Trip Planner
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: "240px", justifyContent: "flex-end" }}>
+          {view === "itinerary" && activeItinerary && (
+            <>
+              <a
+                href={`https://www.google.com/travel/flights?q=Flights%20to%20${encodeURIComponent(activeItinerary.title)}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  background: "var(--bg-card)",
+                  color: "var(--text-primary)",
+                  padding: "10px 16px",
+                  borderRadius: "20px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  border: "1px solid var(--border-subtle)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.15)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.10)";
+                }}
+              >
+                ✈️ Flights
+              </a>
+              <a
+                href={`https://www.google.com/travel/search?q=Hotels%20in%20${encodeURIComponent(activeItinerary.title)}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  background: "var(--bg-card)",
+                  color: "var(--text-primary)",
+                  padding: "10px 16px",
+                  borderRadius: "20px",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  textDecoration: "none",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                  border: "1px solid var(--border-subtle)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,0,0,0.15)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.10)";
+                }}
+              >
+                🏨 Hotels
+              </a>
+            </>
+          )}
+        </div>
       </header>
 
       {/* ─── HERO ─── */}
@@ -279,11 +387,13 @@ export default function Home() {
             }}
           >
             {/* Full-screen Map */}
-            <ItineraryMapView
-              itinerary={activeItinerary}
-              onPinClick={handlePinClick}
-              selectedStopId={selectedStop?.id}
-            />
+            {activeItinerary && (
+              <ItineraryMapView
+                itinerary={activeItinerary}
+                onPinClick={handlePinClick}
+                selectedStopId={selectedStop?.id}
+              />
+            )}
 
             {/* Top center: Tab switcher */}
             <div
@@ -296,7 +406,7 @@ export default function Home() {
               }}
             >
               <ItinerarySwitcher
-                itineraries={MOCK_ITINERARIES}
+                itineraries={itineraries}
                 activeId={activeItineraryId}
                 onSelect={handleSwitchItinerary}
               />
@@ -315,7 +425,7 @@ export default function Home() {
               }}
             >
               <AnimatePresence mode="wait">
-                {selectedStop ? (
+                {selectedStop && activeItinerary ? (
                   <LocationDetailCard
                     key={`detail-${selectedStop.id}`}
                     stop={selectedStop}
@@ -324,63 +434,16 @@ export default function Home() {
                     onBack={handleBackToSummary}
                     onNextDestination={handleNextDestination}
                   />
-                ) : (
+                ) : activeItinerary ? (
                   <ItinerarySummaryCard
                     key={`summary-${activeItinerary.id}`}
                     itinerary={activeItinerary}
-                    onAddItinerary={handleAddItinerary}
                     onStopClick={handlePinClick}
-                    isAdded={savedItineraries.has(activeItinerary.id)}
                   />
-                )}
+                ) : null}
               </AnimatePresence>
             </div>
 
-            {/* Bottom right: Saved toast */}
-            <AnimatePresence>
-              {savedItineraries.has(activeItinerary.id) && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  style={{
-                    position: "absolute",
-                    bottom: "32px",
-                    right: "32px",
-                    zIndex: 15,
-                    background: "rgba(6, 182, 212, 0.12)",
-                    border: "1px solid rgba(6, 182, 212, 0.3)",
-                    borderRadius: "var(--radius-md)",
-                    padding: "10px 20px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
-                    boxShadow: "0 4px 20px rgba(6, 182, 212, 0.15)",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      color: "var(--accent-cyan)",
-                    }}
-                  >
-                    ✓
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: 600,
-                      color: "var(--accent-cyan)",
-                    }}
-                  >
-                    Itinerary Added
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
