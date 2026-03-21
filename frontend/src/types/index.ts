@@ -16,6 +16,7 @@ export interface Itinerary {
   mainImage: string;
   days: number;
   totalCost: string;
+  localTransportation?: string;
   stops: ItineraryStop[];
   media: { id: string; title: string; thumbnail: string }[];
 }

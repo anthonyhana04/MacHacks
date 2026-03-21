@@ -14336,3 +14336,15 @@ Check the render method of `ItinerarySummaryCard`. See https://react.dev/link/wa
 ✓ Compiled in 40ms
 ✓ Compiled in 107ms
 ✓ Compiled in 23ms
+✓ Compiled in 36ms
+✓ Compiled in 72ms
+✓ Compiled in 57ms
+ GET / 200 in 69ms (next.js: 23ms, application-code: 46ms)
+✓ Compiled in 22ms
+✓ Compiled in 24ms
+[browser] Cutoff is currently disabled on terrain
+✓ Compiled in 53ms
+✓ Compiled in 96ms
+ GET / 200 in 141ms (next.js: 101ms, application-code: 39ms)
+✓ Compiled in 41ms
+ GET / 200 in 130ms (next.js: 86ms, application-code: 44ms)

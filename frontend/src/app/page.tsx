@@ -59,6 +59,7 @@ export default function Home() {
           mainImage: dest.hero_image_url || fallbackImage,
           days: tripLengthDays,
           totalCost: dest.budget_tier,
+          localTransportation: dest.local_transportation || "Walking and local public transit are highly recommended.",
           stops: dest.pois.map((poi: any, idx: number) => {
             const typeStr = (poi.type || "").toLowerCase();
             let durationStr = "2 hours";
@@ -174,7 +175,7 @@ export default function Home() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => setView("hero")}>
-          <img src="/ocio2.png" alt="Ocio Logo" style={{ height: "44px", width: "auto", objectFit: "contain" }} />
+          <img src="/ocio3.png" alt="Ocio Logo" style={{ height: "44px", width: "auto", objectFit: "contain" }} />
         </div>
 
         {view === "itinerary" && (
@@ -393,6 +394,38 @@ export default function Home() {
                 onPinClick={handlePinClick}
                 selectedStopId={selectedStop?.id}
               />
+            )}
+
+            {/* Top right: Floating Tips Box */}
+            {activeItinerary && activeItinerary.localTransportation && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                style={{
+                  position: "absolute",
+                  top: "100px",
+                  right: "32px",
+                  zIndex: 20,
+                  background: "var(--bg-card)",
+                  padding: "16px",
+                  borderRadius: "var(--radius-md)",
+                  border: "1px solid var(--border-subtle)",
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+                  backdropFilter: "blur(16px)",
+                  maxWidth: "280px",
+                }}
+              >
+                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                  <div>
+                    <h4 style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      Local Transit Tips
+                    </h4>
+                    <p style={{ fontSize: "12px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.4 }}>
+                      {activeItinerary.localTransportation}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             )}
 
             {/* Top center: Tab switcher */}

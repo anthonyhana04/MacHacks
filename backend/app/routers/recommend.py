@@ -37,6 +37,7 @@ class DestinationResponse(BaseModel):
     why_it_matches: str
     mini_itinerary: list[str]
     neighborhood_highlight: str
+    local_transportation: str
     pois: list[dict]
     media: list[dict]
 
@@ -120,6 +121,7 @@ async def recommend(req: RecommendRequest, db: Session = Depends(get_db)):
             "why_it_matches": enrichment.get("why_it_matches", f"{dest.name} matches your vibe."),
             "mini_itinerary": enrichment.get("mini_itinerary", []),
             "neighborhood_highlight": enrichment.get("neighborhood_highlight", ""),
+            "local_transportation": enrichment.get("local_transportation", "Walking is highly recommended."),
             "pois": pois,
             "media": media,
         })

@@ -20,6 +20,7 @@ For each destination below, generate:
 1. "why_it_matches": A 2-3 sentence explanation of why this destination matches the user's vibe. Be specific, evocative, and personal. Reference the user's original words.
 2. "mini_itinerary": An array of 4-5 bullet strings describing a perfect day/visit. Be specific with neighborhoods, foods, and activities. Format each as "Time period: Activity description".
 3. "neighborhood_highlight": One sentence highlighting the best neighborhood or area to explore.
+4. "local_transportation": A 1-2 sentence quick tip on the best way to navigate or get around this specific destination (e.g., public transit, walking, ride shares).
 
 Destinations:
 {destinations_json}
@@ -30,7 +31,8 @@ Return JSON array in this exact format:
     "destination_id": "...",
     "why_it_matches": "...",
     "mini_itinerary": ["Morning: ...", "Midday: ...", "Afternoon: ...", "Evening: ..."],
-    "neighborhood_highlight": "..."
+    "neighborhood_highlight": "...",
+    "local_transportation": "..."
   }}
 ]
 
@@ -131,6 +133,7 @@ def _fallback_enrichment(prompt: str, parsed_intent: dict, scored_destinations: 
             "why_it_matches": why,
             "mini_itinerary": itinerary,
             "neighborhood_highlight": neighborhood,
+            "local_transportation": f"Walking and applying local public transit is highly recommended for exploring {dest.name}."
         }
 
     return enrichment_map
