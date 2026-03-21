@@ -3,93 +3,85 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SearchSection from "@/components/SearchSection";
-import VibeChips from "@/components/VibeChips";
-import DestinationCard from "@/components/DestinationCard";
-import DetailPanel from "@/components/DetailPanel";
 import LoadingState from "@/components/LoadingState";
+import ItinerarySwitcher from "@/components/ItinerarySwitcher";
+import ItinerarySummaryCard from "@/components/ItinerarySummaryCard";
+import LocationDetailCard from "@/components/LocationDetailCard";
+import ItineraryMapView from "@/components/ItineraryMapView";
+import {
+  MOCK_ITINERARIES,
+  type ItineraryStop,
+} from "@/data/mockItineraries";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-interface Destination {
-  id: string;
-  name: string;
-  country: string;
-  region: string;
-  match_score: number;
-  hero_image_url: string | null;
-  budget_tier: string;
-  best_seasons: string[];
-  coordinates: { lat: number; lng: number };
-  vibe_tags: string[];
-  why_it_matches: string;
-  mini_itinerary: string[];
-  neighborhood_highlight: string;
-  pois: Array<{
-    place_id: string;
-    name: string;
-    type: string;
-    lat: number;
-    lng: number;
-    rating: number;
-  }>;
-  media: Array<{
-    video_id: string;
-    title: string;
-    channel: string;
-    thumbnail: string;
-  }>;
-}
-
-interface ParsedIntent {
-  anchor: { name: string | null; country: string | null };
-  vibes: string[];
-  negations: string[];
-  mood: string | null;
-}
-
-interface RecommendResponse {
-  parsed_intent: ParsedIntent;
-  destinations: Destination[];
-  meta: { response_ms: number; cached: boolean };
-}
+type ViewState = "hero" | "loading" | "itinerary";
 
 export default function Home() {
-  const [results, setResults] = useState<RecommendResponse | null>(null);
-  const [selectedDest, setSelectedDest] = useState<Destination | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [view, setView] = useState<ViewState>("hero");
   const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = useCallback(async (prompt: string) => {
-    setLoading(true);
+  // Itinerary state
+  const [activeItineraryId, setActiveItineraryId] = useState<string>(
+    MOCK_ITINERARIES[0].id
+  );
+  const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null);
+  const [savedItineraries, setSavedItineraries] = useState<Set<string>>(
+    new Set()
+  );
+
+  const activeItinerary =
+    MOCK_ITINERARIES.find((it) => it.id === activeItineraryId) ||
+    MOCK_ITINERARIES[0];
+
+  const handleSearch = useCallback(async (_prompt: string) => {
+    setView("loading");
     setError(null);
-    setResults(null);
-    setSelectedDest(null);
+    setSelectedStop(null);
 
-    try {
-      const res = await fetch(`${API_BASE}/api/recommend`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Request failed: ${res.status}`);
-      }
-
-      const data: RecommendResponse = await res.json();
-      setResults(data);
-
-      // Auto-select first destination
-      if (data.destinations.length > 0) {
-        setSelectedDest(data.destinations[0]);
-      }
-    } catch (err) {
-      console.error("Search error:", err);
-      setError("Something went wrong while compiling your vibe. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // Simulate API delay, then show itinerary view with mock data
+    setTimeout(() => {
+      setActiveItineraryId(MOCK_ITINERARIES[0].id);
+      setView("itinerary");
+    }, 1800);
   }, []);
+
+  const handleSwitchItinerary = useCallback((id: string) => {
+    setActiveItineraryId(id);
+    setSelectedStop(null);
+  }, []);
+
+  const handlePinClick = useCallback((stop: ItineraryStop) => {
+    setSelectedStop(stop);
+  }, []);
+
+  const handleBackToSummary = useCallback(() => {
+    setSelectedStop(null);
+  }, []);
+
+  const handleNextDestination = useCallback(() => {
+    if (!selectedStop) return;
+    const currentIndex = activeItinerary.stops.findIndex(
+      (s) => s.id === selectedStop.id
+    );
+    if (currentIndex < activeItinerary.stops.length - 1) {
+      setSelectedStop(activeItinerary.stops[currentIndex + 1]);
+    }
+  }, [selectedStop, activeItinerary.stops]);
+
+  const handleAddItinerary = useCallback((id: string) => {
+    setSavedItineraries((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const selectedStopIndex = selectedStop
+    ? activeItinerary.stops.findIndex((s) => s.id === selectedStop.id)
+    : -1;
 
   return (
     <main
@@ -101,14 +93,20 @@ export default function Home() {
         flexDirection: "column",
       }}
     >
-      {/* Header */}
+      {/* ─── Header ─── */}
       <header
         style={{
           padding: "20px 32px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          borderBottom: "1px solid var(--border-subtle)",
+          borderBottom:
+            view === "itinerary" ? "none" : "1px solid var(--border-subtle)",
+          position: view === "itinerary" ? "absolute" : "relative",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 20,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -127,6 +125,13 @@ export default function Home() {
             Vibe Compiler
           </h1>
         </div>
+
+        {view === "itinerary" && (
+          <div style={{ flex: 1, maxWidth: "400px", margin: "0 20px" }}>
+            <SearchSection onSearch={handleSearch} compact />
+          </div>
+        )}
+
         <span
           style={{
             fontSize: "13px",
@@ -138,9 +143,9 @@ export default function Home() {
         </span>
       </header>
 
-      {/* Hero / Search Section */}
+      {/* ─── HERO ─── */}
       <AnimatePresence mode="wait">
-        {!results && !loading && (
+        {view === "hero" && !error && (
           <motion.div
             key="hero"
             initial={{ opacity: 0, y: 20 }}
@@ -188,17 +193,17 @@ export default function Home() {
                 lineHeight: 1.6,
               }}
             >
-              Describe your dream trip in any words you want. We&apos;ll compile your vibe
-              into real destinations.
+              Describe your dream trip in any words you want. We&apos;ll compile
+              your vibe into real destinations.
             </motion.p>
             <SearchSection onSearch={handleSearch} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Loading State */}
+      {/* ─── LOADING ─── */}
       <AnimatePresence>
-        {loading && (
+        {view === "loading" && (
           <motion.div
             key="loading"
             initial={{ opacity: 0 }}
@@ -217,9 +222,9 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Error State */}
+      {/* ─── ERROR ─── */}
       <AnimatePresence>
-        {error && !loading && (
+        {error && view !== "loading" && (
           <motion.div
             key="error"
             initial={{ opacity: 0 }}
@@ -235,11 +240,14 @@ export default function Home() {
               gap: "20px",
             }}
           >
-            <p style={{ color: "var(--accent-pink)", fontSize: "16px" }}>
+            <p style={{ color: "var(--accent-coral)", fontSize: "16px" }}>
               {error}
             </p>
             <button
-              onClick={() => setError(null)}
+              onClick={() => {
+                setError(null);
+                setView("hero");
+              }}
               style={{
                 background: "var(--bg-card)",
                 border: "1px solid var(--border-subtle)",
@@ -256,86 +264,123 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Results */}
+      {/* ─── ITINERARY VIEW ─── */}
       <AnimatePresence>
-        {results && !loading && (
+        {view === "itinerary" && (
           <motion.div
-            key="results"
+            key="itinerary"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5 }}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 10,
+            }}
           >
-            {/* Compact search bar at top when results showing */}
+            {/* Full-screen Map */}
+            <ItineraryMapView
+              itinerary={activeItinerary}
+              onPinClick={handlePinClick}
+              selectedStopId={selectedStop?.id}
+            />
+
+            {/* Top center: Tab switcher */}
             <div
               style={{
-                padding: "20px 32px",
-                borderBottom: "1px solid var(--border-subtle)",
+                position: "absolute",
+                top: "80px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 15,
               }}
             >
-              <SearchSection onSearch={handleSearch} compact />
+              <ItinerarySwitcher
+                itineraries={MOCK_ITINERARIES}
+                activeId={activeItineraryId}
+                onSelect={handleSwitchItinerary}
+              />
             </div>
 
-            {/* Parsed vibe chips */}
-            {results.parsed_intent.vibes.length > 0 && (
-              <VibeChips
-                vibes={results.parsed_intent.vibes}
-                negations={results.parsed_intent.negations}
-                mood={results.parsed_intent.mood}
-              />
-            )}
-
-            {/* Results layout */}
+            {/* Left sidebar: Summary ↔ Detail card (vertical slide swap) */}
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns: "400px 1fr",
-                gap: "0",
-                minHeight: "calc(100vh - 200px)",
+                position: "absolute",
+                top: "140px",
+                left: "24px",
+                bottom: "24px",
+                zIndex: 15,
+                display: "flex",
+                alignItems: "flex-start",
               }}
             >
-              {/* Destination list */}
-              <div
-                style={{
-                  borderRight: "1px solid var(--border-subtle)",
-                  overflowY: "auto",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                <p
+              <AnimatePresence mode="wait">
+                {selectedStop ? (
+                  <LocationDetailCard
+                    key={`detail-${selectedStop.id}`}
+                    stop={selectedStop}
+                    stopIndex={selectedStopIndex}
+                    totalStops={activeItinerary.stops.length}
+                    onBack={handleBackToSummary}
+                    onNextDestination={handleNextDestination}
+                  />
+                ) : (
+                  <ItinerarySummaryCard
+                    key={`summary-${activeItinerary.id}`}
+                    itinerary={activeItinerary}
+                    onAddItinerary={handleAddItinerary}
+                    onStopClick={handlePinClick}
+                    isAdded={savedItineraries.has(activeItinerary.id)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Bottom right: Saved toast */}
+            <AnimatePresence>
+              {savedItineraries.has(activeItinerary.id) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
                   style={{
-                    fontSize: "12px",
-                    color: "var(--text-muted)",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    fontWeight: 600,
-                    padding: "0 4px",
+                    position: "absolute",
+                    bottom: "32px",
+                    right: "32px",
+                    zIndex: 15,
+                    background: "rgba(6, 182, 212, 0.12)",
+                    border: "1px solid rgba(6, 182, 212, 0.3)",
+                    borderRadius: "var(--radius-md)",
+                    padding: "10px 20px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
+                    boxShadow: "0 4px 20px rgba(6, 182, 212, 0.15)",
                   }}
                 >
-                  {results.destinations.length} destinations found
-                  {results.meta.cached && " · cached"}
-                  {" · "}
-                  {results.meta.response_ms}ms
-                </p>
-                {results.destinations.map((dest, i) => (
-                  <DestinationCard
-                    key={dest.id}
-                    destination={dest}
-                    rank={i + 1}
-                    selected={selectedDest?.id === dest.id}
-                    onClick={() => setSelectedDest(dest)}
-                    index={i}
-                  />
-                ))}
-              </div>
-
-              {/* Detail panel */}
-              <div style={{ overflowY: "auto" }}>
-                {selectedDest && <DetailPanel destination={selectedDest} />}
-              </div>
-            </div>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color: "var(--accent-cyan)",
+                    }}
+                  >
+                    ✓
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      color: "var(--accent-cyan)",
+                    }}
+                  >
+                    Itinerary Added
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
