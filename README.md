@@ -1,4 +1,4 @@
-# Ocio - Skip the search. Start the trip.
+# Ocio - Skip the search. Start the trip
 Ocio is an AI-native travel platform that transforms abstract, vibe-based prompts into comprehensive, 
 ready-to-use itineraries. Moving beyond traditional search filters, 
 Ocio leverages the **Gemini API** to interpret natural language capturing specific moods, 
